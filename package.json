@@ -21,7 +21,7 @@
     "express": "^4.17.1",
     "helmet": "^4.0.0",
     "log4js": "^6.3.0",
-    "socket.io": "^2.3.0",
+    "socket.io": "^2.4.0",
     "tslib": "^2.0.0",
     "youtube-chat": "^1.1.0"
   }
