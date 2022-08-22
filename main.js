@@ -36,7 +36,7 @@ io.on('connection', (socket) => {
             logger.info(`${socket.id} begin to receive chat. (${v})`)
             console.log('videoId: ' + v)
             youtubeChat[socket.id] = new LiveChat({ liveId: v })
-            youtubeChat[socket.id].on('comment', (msg) => {
+            youtubeChat[socket.id].on('chat', (msg) => {
                 io.to(socket.id).emit('comment', msg)
             })
             youtubeChat[socket.id].on('error', (err)=> {
