@@ -24,6 +24,6 @@
     "log4js": "^6.3.0",
     "socket.io": "^2.4.1",
     "tslib": "^2.3.1",
-    "youtube-chat": "git+https://github.com/IcedCoffeee/youtube-chat.git"
+    "youtube-chat": "^2.1.1"
   }
 }
