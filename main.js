@@ -34,7 +34,7 @@ io.on('connection', (socket) => {
     socket.on('event', () => { })
     socket.on('begin', (v) => {
         if (v.match(/[^"&?\/\s]{11}/)) {
-            logger.info(`${socket.id} via ${socket.handshake.headers["X-Forwarded-for"]} begin to receive chat. ( https://youtu.be/${v} )`)
+            logger.info(`${socket.id} via ${socket.handshake.headers["x-forwarded-for"]} begin to receive chat. ( https://youtu.be/${v} )`)
             console.log('videoId: ' + v)
             youtubeChat[socket.id] = new LiveChat({ liveId: v })
             youtubeChat[socket.id].on('chat', (msg) => {
