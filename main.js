@@ -9,12 +9,13 @@ app.use(helmet())
 
 log4js.configure({
     appenders: {
-        chatlog: { 
-            type: 'dateFile', 
+        chatlog: {
+            type: 'dateFile',
             filename: 'youtube-chat.log',
             pattern: "-yyyyMMdd",
             backups: 14,
-            compress: true}
+            compress: true
+        }
     },
     categories: {
         default: { appenders: ['chatlog'], level: 'info' },
@@ -28,36 +29,44 @@ const io = require('socket.io')(http)
 var youtubeChat = {}
 
 io.on('connection', (socket) => {
-    logger.info(socket.id+" is connecting.")
+    logger.info(socket.id + " is connecting.")
     console.log("Started!", socket.id);
     socket.on('event', () => { })
     socket.on('begin', (v) => {
         if (v.match(/[^"&?\/\s]{11}/)) {
-            logger.info(`${socket.id} begin to receive chat. (${v})`)
+            logger.info(`${socket.id} via ${socket.handshake.headers["X-Forwarded-for"]} begin to receive chat. ( https://youtu.be/${v} )`)
             console.log('videoId: ' + v)
             youtubeChat[socket.id] = new LiveChat({ liveId: v })
             youtubeChat[socket.id].on('chat', (msg) => {
                 io.to(socket.id).emit('comment', msg)
             })
-            youtubeChat[socket.id].on('error', (err)=> {
+            youtubeChat[socket.id].on('error', (err) => {
                 logger.info(`YouTube Chat Error: ${err}`)
-                youtubeChat[socket.id].stop()
-                delete youtubeChat[socket.id]
-                logger.info(`Current Connections: [${Object.keys(youtubeChat)}]`)
+                try {
+                    youtubeChat[socket.id].stop()
+                } catch (e) {
+                    logger.error(e)
+                } finally {
+                    delete youtubeChat[socket.id]
+                    logger.info(`Current Connections: [${Object.keys(youtubeChat)}]`)
+                }
             })
             youtubeChat[socket.id].start()
         }
     })
     socket.on('disconnect', () => {
         console.log("Stopped!", socket.id)
-        if (typeof youtubeChat[socket.id] != "undefined") {
-            logger.info(`${socket.id} diconnected.`)
+        logger.info(`${socket.id} diconnected.`)
+        try {
             youtubeChat[socket.id].stop()
+        } catch (e) {
+            logger.error(e)
+        } finally {
             delete youtubeChat[socket.id]
+            logger.info(`Current Connections: [${Object.keys(youtubeChat)}]`)
         }
-        logger.info(`Current Connections: [${Object.keys(youtubeChat)}]`)
     })
-    socket.on('error', (err)=>{
+    socket.on('error', (err) => {
         logger.error("Error: ", err)
     })
 })

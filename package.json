@@ -19,11 +19,11 @@
   "dependencies": {
     "axios": "^0.21.4",
     "cors": "^2.8.5",
-    "express": "^4.17.1",
+    "express": "^4.18.1",
     "helmet": "^4.6.0",
-    "log4js": "^6.3.0",
-    "socket.io": "^2.4.1",
-    "tslib": "^2.3.1",
+    "log4js": "^6.6.1",
+    "socket.io": "^2.5.0",
+    "tslib": "^2.4.0",
     "youtube-chat": "^2.1.1"
   }
 }
