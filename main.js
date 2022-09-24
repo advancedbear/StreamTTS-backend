@@ -15,13 +15,21 @@ log4js.configure({
             pattern: "-yyyyMMdd",
             backups: 14,
             compress: true
+        },
+        errorlog: {
+            type: 'dateFile',
+            filename: 'error.log',
+            pattern: "-yyyyMMdd",
+            backups: 14,
+            compress: true
         }
     },
     categories: {
-        default: { appenders: ['chatlog'], level: 'info' },
+        default: { appenders: ['chatlog', 'errorlog'], level: 'all' },
     }
 })
 var logger = log4js.getLogger('chatlog')
+var error_logger = log4js.getLogger('errorlog')
 
 const http = require('http').createServer(app)
 const io = require('socket.io')(http)
@@ -41,11 +49,11 @@ io.on('connection', (socket) => {
                 io.to(socket.id).emit('comment', msg)
             })
             youtubeChat[socket.id].on('error', (err) => {
-                logger.info(`YouTube Chat Error: ${err}`)
+                error_logger.warn(`YouTube Chat Error: ${err}`)
                 try {
                     youtubeChat[socket.id].stop()
                 } catch (e) {
-                    logger.error(e)
+                    error_logger.error(e)
                 } finally {
                     delete youtubeChat[socket.id]
                     logger.info(`Current Connections: [${Object.keys(youtubeChat)}]`)
@@ -60,14 +68,14 @@ io.on('connection', (socket) => {
         try {
             youtubeChat[socket.id].stop()
         } catch (e) {
-            logger.error(e)
+            error_logger.warn(e)
         } finally {
             delete youtubeChat[socket.id]
             logger.info(`Current Connections: [${Object.keys(youtubeChat)}]`)
         }
     })
     socket.on('error', (err) => {
-        logger.error("Error: ", err)
+        error_logger.error("Error: ", err)
     })
 })
 
