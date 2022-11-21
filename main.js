@@ -9,6 +9,9 @@ app.use(helmet())
 
 log4js.configure({
     appenders: {
+        console: {
+            type: "console"
+        },
         chatlog: {
             type: 'dateFile',
             filename: 'youtube-chat.log',
@@ -25,7 +28,8 @@ log4js.configure({
         }
     },
     categories: {
-        default: { appenders: ['chatlog', 'errorlog'], level: 'all' },
+        default: { appenders: ['chatlog'], level: 'all' },
+        error: { appenders: ['errorlog'], level: 'warn' }
     }
 })
 var logger = log4js.getLogger('chatlog')
@@ -53,9 +57,10 @@ io.on('connection', (socket) => {
                 try {
                     youtubeChat[socket.id].stop()
                 } catch (e) {
-                    error_logger.error(e)
+                    error_logger.error(e.message)
                 } finally {
                     delete youtubeChat[socket.id]
+                    socket.disconnect(true)
                     logger.info(`Current Connections: [${Object.keys(youtubeChat)}]`)
                 }
             })
