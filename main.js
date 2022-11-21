@@ -13,11 +13,16 @@ log4js.configure({
             type: "console"
         },
         chatlog: {
-            type: 'dateFile',
-            filename: 'youtube-chat.log',
-            pattern: "-yyyyMMdd",
-            backups: 14,
-            compress: true
+            type: "logLevelFilter",
+            level: "TRACE",
+            maxLevel: "INFO",
+            appender: {
+                type: 'dateFile',
+                filename: 'youtube-chat.log',
+                pattern: "-yyyyMMdd",
+                backups: 14,
+                compress: true
+            }
         },
         errorlog: {
             type: 'dateFile',
