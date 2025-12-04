@@ -1,4 +1,5 @@
 const express = require('express')
+const axios = require('axios').default
 const LiveChat = require('youtube-chat').LiveChat
 const app = express()
 const cors = require('cors')
@@ -11,12 +12,6 @@ log4js.configure({
     appenders: {
         console: {
             type: "console"
-        },
-        filter: {
-            type: "logLevelFilter",
-            level: "TRACE",
-            maxLevel: "INFO",
-            appender: "chatlog"
         },
         chatlog: {
             type: 'dateFile',
@@ -34,12 +29,12 @@ log4js.configure({
         }
     },
     categories: {
-        default: { appenders: ['chatlog'], level: 'all' },
+        default: { appenders: ['chatlog'], level: 'info' },
         error: { appenders: ['errorlog'], level: 'warn' }
     }
 })
-var logger = log4js.getLogger('chatlog')
-var error_logger = log4js.getLogger('errorlog')
+var logger = log4js.getLogger('default')
+var error_logger = log4js.getLogger('error')
 
 const http = require('http').createServer(app)
 const io = require('socket.io')(http)
@@ -54,23 +49,33 @@ io.on('connection', (socket) => {
         if (v.match(/[^"&?\/\s]{11}/)) {
             logger.info(`${socket.id} via ${socket.handshake.headers["x-forwarded-for"]} begin to receive chat. ( https://youtu.be/${v} )`)
             console.log('videoId: ' + v)
-            youtubeChat[socket.id] = new LiveChat({ liveId: v })
-            youtubeChat[socket.id].on('chat', (msg) => {
-                io.to(socket.id).emit('comment', msg)
-            })
-            youtubeChat[socket.id].on('error', (err) => {
-                error_logger.warn(`YouTube Chat Error: ${err}`)
-                try {
-                    youtubeChat[socket.id].stop()
-                } catch (e) {
-                    error_logger.error(e.message)
-                } finally {
-                    delete youtubeChat[socket.id]
-                    socket.disconnect(true)
-                    logger.info(`Current Connections: [${Object.keys(youtubeChat)}]`)
+            axios.get(`https://www.youtube.com/watch?v=${v}`, {headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36' }})
+            .then(response => {
+                const html = response.data
+                const canonicalLink = html.match(/<link rel="canonical" href="(.*?)">/)
+                if(canonicalLink == "undefined") {
+                    io.to(socket.id).emit('error', "YTERROR")
+                    error_logger.error('YouTube block access detected or video does not exist.')
+                } else {
+                    youtubeChat[socket.id] = new LiveChat({ liveId: v })
+                    youtubeChat[socket.id].on('chat', (msg) => {
+                        io.to(socket.id).emit('comment', msg)
+                    })
+                    youtubeChat[socket.id].on('error', (err) => {
+                        error_logger.warn(`YouTube Chat Error: ${err}`)
+                        try {
+                            youtubeChat[socket.id].stop()
+                        } catch (e) {
+                            error_logger.error(e.message)
+                        } finally {
+                            delete youtubeChat[socket.id]
+                            socket.disconnect(true)
+                            logger.info(`Current Connections: [${Object.keys(youtubeChat)}]`)
+                        }
+                    })
+                    youtubeChat[socket.id].start()
                 }
             })
-            youtubeChat[socket.id].start()
         }
     })
     socket.on('disconnect', () => {
