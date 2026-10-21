@@ -7,30 +7,19 @@ const helmet = require('helmet')
 const log4js = require('log4js')
 app.use(cors())
 app.use(helmet())
+app.get('/', (req, res) => {
+    res.status(200).send('StreamTTS backend is running.')
+})
 
 log4js.configure({
     appenders: {
         console: {
             type: "console"
-        },
-        chatlog: {
-            type: 'dateFile',
-            filename: 'youtube-chat.log',
-            pattern: "-yyyyMMdd",
-            backups: 14,
-            compress: true
-        },
-        errorlog: {
-            type: 'dateFile',
-            filename: 'error.log',
-            pattern: "-yyyyMMdd",
-            backups: 14,
-            compress: true
         }
     },
     categories: {
-        default: { appenders: ['chatlog'], level: 'info' },
-        error: { appenders: ['errorlog'], level: 'warn' }
+        default: { appenders: ['console'], level: 'info' },
+        error: { appenders: ['console'], level: 'warn' }
     }
 })
 var logger = log4js.getLogger('default')
@@ -53,7 +42,7 @@ io.on('connection', (socket) => {
             .then(response => {
                 const html = response.data
                 const canonicalLink = html.match(/<link rel="canonical" href="(.*?)">/)
-                if(canonicalLink == "undefined") {
+                if(canonicalLink[1] == "undefined") {
                     io.to(socket.id).emit('error', "YTERROR")
                     error_logger.error('YouTube block access detected or video does not exist.')
                 } else {
@@ -95,4 +84,4 @@ io.on('connection', (socket) => {
     })
 })
 
-http.listen(3000)
+http.listen(process.env.PORT || 3000)
