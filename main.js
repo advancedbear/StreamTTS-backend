@@ -53,7 +53,7 @@ io.on('connection', (socket) => {
             .then(response => {
                 const html = response.data
                 const canonicalLink = html.match(/<link rel="canonical" href="(.*?)">/)
-                if(canonicalLink == "undefined") {
+                if(canonicalLink[1] == "undefined") {
                     io.to(socket.id).emit('error', "YTERROR")
                     error_logger.error('YouTube block access detected or video does not exist.')
                 } else {
